@@ -1,5 +1,5 @@
 const heraldPartake_journalName = "Herald Partake";
-
+let heraldPartake_listHistoryUser = [];
 function heraldPartake_renderButton() {
   const existingBar = document.getElementById("heraldPartake-buttonContainer");
   if (existingBar) {
@@ -34,9 +34,7 @@ function heraldPartake_renderButton() {
 }
 
 async function heraldPartake_renderListHistory() {
-  const existingBar = document.getElementById(
-    "heraldPartake-historyListContainer"
-  );
+  const existingBar = document.getElementById("heraldPartake-listHistoryDiv");
   if (existingBar) {
     existingBar.remove();
   }
@@ -49,7 +47,7 @@ async function heraldPartake_renderListHistory() {
       const div = document.createElement("div");
       div.innerHTML = html;
       const partake = div.firstChild;
-      partake.id = "heraldPartake-historyListContainer";
+      partake.id = "heraldPartake-listHistoryDiv";
 
       document.body.appendChild(partake);
       heraldPartake_renderHistoryUser();
@@ -61,12 +59,105 @@ async function heraldPartake_renderListHistory() {
 
 async function heraldPartake_activeBell() {
   const user = game.user;
-
+  const hexColor = `${user.color.toString(16).padStart(6, "0")}`;
   if (user.role === CONST.USER_ROLES.PLAYER) {
-    await heraldPartake_joinGame(user.name, user.id);
+    await heraldPartake_dialogJoinGame(user.name, hexColor, user.id);
   } else {
     await heraldPartake_createJournal();
   }
+}
+
+async function heraldPartake_dialogJoinGame(playerName, color, id) {
+  let content = `
+      <div>
+          <p>Please choose your option:</p>
+          <label>
+              <input type="radio" name="roleOption" value="roleplaying" checked> Roleplaying
+          </label>
+          <br>
+          <label>
+              <input type="radio" name="roleOption" value="question"> Question
+          </label>
+          <br>
+          <div id="heraldPartake-questionInputContainer" style="display:none;">
+              <label for="heraldPartake-questionInput">Please provide your question:</label>
+              <textarea id="heraldPartake-questionInput" placeholder="Your question..." maxlength="300" rows="4" cols="40"></textarea>
+              <p id="heraldPartake-questionWarning" style="color: red; display: none;">Question cannot be empty.</p>
+          </div>
+      </div>
+  `;
+
+  let dialog = new Dialog({
+    title: "Herald Partake Dialog",
+    content: content,
+    buttons: {
+      join: {
+        label: "Join Game",
+        callback: async () => {
+          let selectedOption = document.querySelector(
+            'input[name="roleOption"]:checked'
+          ).value;
+          let questionInput =
+            selectedOption === "question"
+              ? document.getElementById("heraldPartake-questionInput").value
+              : "";
+
+          if (selectedOption === "question" && !questionInput) {
+            document.getElementById(
+              "heraldPartake-questionWarning"
+            ).style.display = "block";
+            ui.notifications.error("Question cannot be empty.");
+            return;
+          } else {
+            document.getElementById(
+              "heraldPartake-questionWarning"
+            ).style.display = "none";
+
+            await heraldPartake_joinGame(
+              playerName,
+              color,
+              selectedOption,
+              questionInput,
+              id
+            );
+          }
+        },
+      },
+    },
+    render: (html) => {
+      html.find('input[value="question"]').on("change", () => {
+        document.getElementById(
+          "heraldPartake-questionInputContainer"
+        ).style.display = "block";
+        document.getElementById("heraldPartake-questionWarning").style.display =
+          "none";
+      });
+      html.find('input[value="roleplaying"]').on("change", () => {
+        document.getElementById(
+          "heraldPartake-questionInputContainer"
+        ).style.display = "none";
+        document.getElementById("heraldPartake-questionWarning").style.display =
+          "none";
+      });
+    },
+  });
+
+  dialog.render(true);
+
+  Hooks.once("renderDialog", (app) => {
+    if (app instanceof Dialog && app.title === "Herald Partake Dialog") {
+      const width = 500;
+      const height = 300;
+
+      app.setPosition({
+        left: (window.innerWidth - width) / 2,
+        top: (window.innerHeight - height) / 2,
+        width: width,
+        height: height,
+        scale: 1.0,
+      });
+    }
+  });
 }
 
 async function heraldPartake_createJournal() {
@@ -91,7 +182,7 @@ async function heraldPartake_createJournal() {
   }
 }
 
-async function heraldPartake_joinGame(playerName, id) {
+async function heraldPartake_joinGame(playerName, color, option, input, id) {
   let journalEntry = game.journal.find(
     (j) => j.name === heraldPartake_journalName
   );
@@ -101,11 +192,12 @@ async function heraldPartake_joinGame(playerName, id) {
     );
     return;
   }
+
   const pageData = {
-    name: `${playerName}|${id}`,
+    name: `${playerName}|${color}|${id}`,
     type: "text",
     text: {
-      content: new Date().toISOString(),
+      content: `time:${new Date().toISOString()}|${option}|${input}`,
       format: 1,
     },
     ownership: { default: 3 },
@@ -136,138 +228,171 @@ async function heraldPartake_renderHistoryUser() {
   if (!journal) {
     return;
   }
-  let listHistoryUser = journal.pages.contents
-    .slice()
-    .reverse()
-    .map((item, index) => ({
-      id: index + 1,
-      ...item,
-    }));
-  console.log(listHistoryUser);
+  heraldPartake_listHistoryUser = journal.pages.contents.slice().reverse();
   const historyList = document.getElementById(
     "heraldPartake-historyListContainer"
   );
   let templateListPartake = ``;
-  listHistoryUser.forEach((item) => {
+  heraldPartake_listHistoryUser.forEach((item) => {
     templateListPartake += `
     <li class="heraldPartake-historyItem">
       <div class="heraldPartake-historyItemTop">
-        <div class="heraldPartake-playerName">tesPlayer1</div>
-        <div class="heraldPartake-buttonHistoryContainer">
-          <div class="heraldPartake-buttonHistoryAccept">V</div>
-          <div class="heraldPartake-buttonHistoryDelete">X</div>
+        <div id="heraldPartake-playerName-${item.id}" class="heraldPartake-playerName" ></div>
+        <div id="heraldPartake-buttonHistoryContainer-${item.id}" class="heraldPartake-buttonHistoryContainer">
+          
         </div>
       </div>
       <div class="heraldPartake-historyItemBottom">
-        <div class="heraldPartake-questionContainer">
-          <div class="heraldPartake-statusValue">Roleplaying</div>
+        <div id="heraldPartake-optionContainer-${item.id}" class="heraldPartake-optionContainer">
+       
         </div>
-        
-        <div class="heraldPartake-historyTime">2 minutes ago</div>
+        <div id="heraldPartake-historyTime-${item.id}" class="heraldPartake-historyTime"></div>
       </div>
     </li>
     `;
   });
-  historyList.innerHTML = `
-  <div>
-    <ul>
-      ${templateListPartake}
-    </ul>
-  </div>
-  `;
+  if (historyList) {
+    historyList.innerHTML = `
+    <div>
+      <ul>
+        ${templateListPartake}
+      </ul>
+    </div>
+    `;
+    await heraldPartake_renderDataHistory();
+  }
 }
 
-// async function heraldPartake_renderHistoryUser() {
-//   const user = game.user;
+async function heraldPartake_renderDataHistory() {
+  const user = game.user;
 
-//   let journal = game.journal.find((j) => j.name === heraldPartake_journalName);
-//   if (!journal) {
-//     return;
-//   }
+  heraldPartake_listHistoryUser.forEach((item) => {
+    let arrName = item.name.split("|");
+    let arrContent = item.text.content.split("|");
+    let playerName = document.getElementById(
+      `heraldPartake-playerName-${item.id}`
+    );
+    if (playerName) {
+      playerName.innerText = arrName[0];
+      playerName.style.color = `${arrName[1]}`;
+    }
 
-//   let listHistoryUser = journal.pages.contents;
+    let playerTime = document.getElementById(
+      `heraldPartake-historyTime-${item.id}`
+    );
+    if (playerTime) {
+      let timeData = arrContent[0].replace("time:", "").trim();
+      let time = new Date(timeData);
+      let now = new Date();
+      let diffInSeconds = Math.floor((now - time) / 1000);
+      if (diffInSeconds < 60) {
+        playerTime.innerText = `${diffInSeconds} seconds ago`;
+      } else if (diffInSeconds < 3600) {
+        let diffInMinutes = Math.floor(diffInSeconds / 60);
+        playerTime.innerText = `${diffInMinutes} minutes ago`;
+      } else if (diffInSeconds < 86400) {
+        let diffInHours = Math.floor(diffInSeconds / 3600);
+        playerTime.innerText = `${diffInHours} hours ago`;
+      } else {
+        let diffInDays = Math.floor(diffInSeconds / 86400);
+        playerTime.innerText = `${diffInDays} days ago`;
+      }
+    }
+    let buttonControl = document.getElementById(
+      `heraldPartake-buttonHistoryContainer-${item.id}`
+    );
 
-//   const historyList = document.getElementById(
-//     "heraldPartake-historyListContainer"
-//   );
-//   if (!historyList) return;
+    if (user.role === CONST.USER_ROLES.GAMEMASTER) {
+      let confirmButton = document.createElement("div");
+      confirmButton.innerHTML = `<i class="fa-solid fa-check"></i>`;
+      confirmButton.classList.add("heraldPartake-buttonHistoryConfirm");
+      confirmButton.addEventListener("click", async () => {
+        await heraldPartake_confirmHistoryUser(arrName[2]);
+      });
 
-//   historyList.innerHTML = "";
+      let deleteButton = document.createElement("div");
+      deleteButton.classList.add("heraldPartake-buttonHistoryDelete");
+      deleteButton.innerHTML = `<i class="fa-solid fa-x"></i>`;
+      deleteButton.addEventListener("click", async () => {
+        await heraldPartake_deleteHistoryUser(item._id);
+      });
 
-//   const ul = document.createElement("ul");
+      buttonControl.appendChild(confirmButton);
+      buttonControl.appendChild(deleteButton);
+    } else if (item.ownership[user.id] === 3) {
+      let deleteButton = document.createElement("div");
+      deleteButton.classList.add("heraldPartake-buttonHistoryDelete");
+      deleteButton.innerText = "X";
+      deleteButton.addEventListener("click", async () => {
+        await heraldPartake_deleteHistoryUser(item._id);
+      });
+      buttonControl.appendChild(deleteButton);
+    }
 
-//   function timeAgo(dateString) {
-//     const now = new Date();
-//     const date = new Date(dateString);
-//     const diff = now - date;
+    let playerOption = document.getElementById(
+      `heraldPartake-optionContainer-${item.id}`
+    );
 
-//     const minutes = Math.floor(diff / (1000 * 60));
-//     const hours = Math.floor(diff / (1000 * 60 * 60));
-//     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    if (playerOption) {
+      if (arrContent[1] == "question") {
+        let optionDiv = document.createElement("div");
+        optionDiv.classList.add("heraldPartake-optionSelected");
+        optionDiv.innerText = `Question`;
 
-//     if (days > 0) return `${days} day${days > 1 ? "s" : ""} ago`;
-//     if (hours > 0) return `${hours} hour${hours > 1 ? "s" : ""} ago`;
-//     if (minutes > 0) return `${minutes} minute${minutes > 1 ? "s" : ""} ago`;
-//     return "Just now";
-//   }
+        playerOption.appendChild(optionDiv);
 
-//   listHistoryUser.reverse().forEach((item) => {
-//     const li = document.createElement("li");
-//     li.classList.add("heraldPartake-historyItem");
-//     const nameParts = item.name.split(" ");
-//     const playerName = nameParts[0];
-//     const playerId = nameParts[1];
-//     const playerTime = item.text.content;
-//     const relativeTime = timeAgo(playerTime);
+        optionDiv.addEventListener("mouseenter", () => {
+          heraldPartake_renderHistoryTooltip(true, arrName[0], arrContent[2]);
+        });
 
-//     const playerNameDiv = document.createElement("div");
-//     playerNameDiv.classList.add("heraldPartake-playerName");
-//     playerNameDiv.textContent = `${playerName}`;
+        optionDiv.addEventListener("mouseleave", () => {
+          heraldPartake_renderHistoryTooltip(false, arrName[0], arrContent[2]);
+        });
+      } else {
+        let optionDiv = document.createElement("div");
+        optionDiv.classList.add("heraldPartake-optionSelected");
+        optionDiv.innerText = `Roleplaying`;
 
-//     const playerTimeDiv = document.createElement("div");
-//     playerTimeDiv.classList.add("heraldPartake-playerTime");
-//     playerTimeDiv.textContent = `${relativeTime}`;
+        playerOption.appendChild(optionDiv);
+      }
+    }
+  });
+}
 
-//     const deleteButtonDiv = document.createElement("div");
-//     deleteButtonDiv.classList.add("heraldPartake-deleteButton");
+async function heraldPartake_renderHistoryTooltip(hover, name, data) {
+  let historyTooltip = document.getElementById("heraldPartake-historyTooltip");
+  if (hover == true) {
+    let tooltipValue = document.createElement("div");
+    tooltipValue.classList.add("heraldPartake-optionTooltipValue");
+    tooltipValue.innerText = data;
+    historyTooltip.appendChild(tooltipValue);
+    historyTooltip.style.display = "block";
+  } else {
+    historyTooltip.innerHTML = "";
+    historyTooltip.style.display = "none";
+  }
+}
 
-//     if (user.role === CONST.USER_ROLES.GAMEMASTER || user.id == playerId) {
-//       const deleteButton = document.createElement("div");
-//       deleteButton.innerHTML = `<i class="fa-solid fa-x"></i>`;
-//       deleteButton.classList.add("heraldPartake-deleteButtonText");
-
-//       deleteButton.addEventListener("click", async () => {
-//         await heraldPartake_deleteHistoryUser(item._id);
-//       });
-
-//       deleteButtonDiv.appendChild(deleteButton);
-//     }
-
-//     li.appendChild(playerNameDiv);
-//     li.appendChild(playerTimeDiv);
-//     li.appendChild(deleteButtonDiv);
-
-//     ul.appendChild(li);
-//   });
-
-//   historyList.appendChild(ul);
-// }
+async function heraldPartake_confirmHistoryUser(id) {
+  let audio = new Audio("/modules/herald-partake-beta/assets/bell_sound.mp3");
+  audio.play();
+}
 
 async function heraldPartake_deleteHistoryUser(pageId) {
+  console.log(pageId);
   let journal = game.journal.find((j) => j.name === heraldPartake_journalName);
   if (!journal) return;
 
   let page = journal.pages.get(pageId);
   if (page) {
     await page.delete();
-    ui.notifications.info("Player history removed.");
     heraldPartake_renderHistoryUser();
   }
 }
 
 function heraldPartake_universalInterfalUpdate() {
-  setInterval(() => {
-    heraldPartake_renderHistoryUser();
+  setInterval(async () => {
+    await heraldPartake_renderHistoryUser();
   }, 5000);
 }
 
