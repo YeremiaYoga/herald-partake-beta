@@ -63,7 +63,7 @@ async function heraldPartake_activeBell() {
   const user = game.user;
 
   if (user.role === CONST.USER_ROLES.PLAYER) {
-    await heraldPartake_joinGame(user.name);
+    await heraldPartake_joinGame(user.name, user.id);
   } else {
     await heraldPartake_createJournal();
   }
@@ -86,12 +86,12 @@ async function heraldPartake_createJournal() {
     } else {
       ui.notifications.info("Herald Partake Active");
     }
-  }else{
+  } else {
     ui.notifications.info("Herald Partake Already Active");
   }
 }
 
-async function heraldPartake_joinGame(playerName) {
+async function heraldPartake_joinGame(playerName, id) {
   let journalEntry = game.journal.find(
     (j) => j.name === heraldPartake_journalName
   );
@@ -102,10 +102,10 @@ async function heraldPartake_joinGame(playerName) {
     return;
   }
   const pageData = {
-    name: playerName,
+    name: `${playerName}|${id}`,
     type: "text",
     text: {
-      content: `${new Date().toLocaleString()}`,
+      content: new Date().toISOString(),
       format: 1,
     },
     ownership: { default: 3 },
@@ -136,73 +136,122 @@ async function heraldPartake_renderHistoryUser() {
   if (!journal) {
     return;
   }
-
-  let listHistoryUser = journal.pages.contents;
-
+  let listHistoryUser = journal.pages.contents
+    .slice()
+    .reverse()
+    .map((item, index) => ({
+      id: index + 1,
+      ...item,
+    }));
+  console.log(listHistoryUser);
   const historyList = document.getElementById(
     "heraldPartake-historyListContainer"
   );
-  if (!historyList) return;
-
-  historyList.innerHTML = "";
-
-  const ul = document.createElement("ul");
-
-  function timeAgo(dateString) {
-    const now = new Date();
-    const date = new Date(dateString);
-    const diff = now - date;
-
-    const minutes = Math.floor(diff / (1000 * 60));
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-
-    if (days > 0) return `${days} day${days > 1 ? "s" : ""} ago`;
-    if (hours > 0) return `${hours} hour${hours > 1 ? "s" : ""} ago`;
-    if (minutes > 0) return `${minutes} minute${minutes > 1 ? "s" : ""} ago`;
-    return "Just now";
-  }
-
-  listHistoryUser.reverse().forEach((item) => {
-    const li = document.createElement("li");
-    li.classList.add("heraldPartake-historyItem");
-
-    const playerName = item.name;
-    const playerTime = item.text.content;
-    const relativeTime = timeAgo(playerTime);
-
-    const playerNameDiv = document.createElement("div");
-    playerNameDiv.classList.add("heraldPartake-playerName");
-    playerNameDiv.textContent = `${playerName}`;
-
-    const playerTimeDiv = document.createElement("div");
-    playerTimeDiv.classList.add("heraldPartake-playerTime");
-    playerTimeDiv.textContent = `${relativeTime}`;
-
-    const deleteButtonDiv = document.createElement("div");
-    deleteButtonDiv.classList.add("heraldPartake-deleteButton");
-
-    if (user.role === CONST.USER_ROLES.GAMEMASTER) {
-      const deleteButton = document.createElement("div");
-      deleteButton.innerHTML = `<i class="fa-solid fa-x"></i>`;
-      deleteButton.classList.add("heraldPartake-deleteButtonText");
-
-      deleteButton.addEventListener("click", async () => {
-        await heraldPartake_deleteHistoryUser(item._id);
-      });
-
-      deleteButtonDiv.appendChild(deleteButton);
-    }
-
-    li.appendChild(playerNameDiv);
-    li.appendChild(playerTimeDiv);
-    li.appendChild(deleteButtonDiv);
-
-    ul.appendChild(li);
+  let templateListPartake = ``;
+  listHistoryUser.forEach((item) => {
+    templateListPartake += `
+    <li class="heraldPartake-historyItem">
+      <div class="heraldPartake-historyItemTop">
+        <div class="heraldPartake-playerName">tesPlayer1</div>
+        <div class="heraldPartake-buttonHistoryContainer">
+          <div class="heraldPartake-buttonHistoryAccept">V</div>
+          <div class="heraldPartake-buttonHistoryDelete">X</div>
+        </div>
+      </div>
+      <div class="heraldPartake-historyItemBottom">
+        <div class="heraldPartake-questionContainer">
+          <div class="heraldPartake-statusValue">Roleplaying</div>
+        </div>
+        
+        <div class="heraldPartake-historyTime">2 minutes ago</div>
+      </div>
+    </li>
+    `;
   });
-
-  historyList.appendChild(ul);
+  historyList.innerHTML = `
+  <div>
+    <ul>
+      ${templateListPartake}
+    </ul>
+  </div>
+  `;
 }
+
+// async function heraldPartake_renderHistoryUser() {
+//   const user = game.user;
+
+//   let journal = game.journal.find((j) => j.name === heraldPartake_journalName);
+//   if (!journal) {
+//     return;
+//   }
+
+//   let listHistoryUser = journal.pages.contents;
+
+//   const historyList = document.getElementById(
+//     "heraldPartake-historyListContainer"
+//   );
+//   if (!historyList) return;
+
+//   historyList.innerHTML = "";
+
+//   const ul = document.createElement("ul");
+
+//   function timeAgo(dateString) {
+//     const now = new Date();
+//     const date = new Date(dateString);
+//     const diff = now - date;
+
+//     const minutes = Math.floor(diff / (1000 * 60));
+//     const hours = Math.floor(diff / (1000 * 60 * 60));
+//     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+//     if (days > 0) return `${days} day${days > 1 ? "s" : ""} ago`;
+//     if (hours > 0) return `${hours} hour${hours > 1 ? "s" : ""} ago`;
+//     if (minutes > 0) return `${minutes} minute${minutes > 1 ? "s" : ""} ago`;
+//     return "Just now";
+//   }
+
+//   listHistoryUser.reverse().forEach((item) => {
+//     const li = document.createElement("li");
+//     li.classList.add("heraldPartake-historyItem");
+//     const nameParts = item.name.split(" ");
+//     const playerName = nameParts[0];
+//     const playerId = nameParts[1];
+//     const playerTime = item.text.content;
+//     const relativeTime = timeAgo(playerTime);
+
+//     const playerNameDiv = document.createElement("div");
+//     playerNameDiv.classList.add("heraldPartake-playerName");
+//     playerNameDiv.textContent = `${playerName}`;
+
+//     const playerTimeDiv = document.createElement("div");
+//     playerTimeDiv.classList.add("heraldPartake-playerTime");
+//     playerTimeDiv.textContent = `${relativeTime}`;
+
+//     const deleteButtonDiv = document.createElement("div");
+//     deleteButtonDiv.classList.add("heraldPartake-deleteButton");
+
+//     if (user.role === CONST.USER_ROLES.GAMEMASTER || user.id == playerId) {
+//       const deleteButton = document.createElement("div");
+//       deleteButton.innerHTML = `<i class="fa-solid fa-x"></i>`;
+//       deleteButton.classList.add("heraldPartake-deleteButtonText");
+
+//       deleteButton.addEventListener("click", async () => {
+//         await heraldPartake_deleteHistoryUser(item._id);
+//       });
+
+//       deleteButtonDiv.appendChild(deleteButton);
+//     }
+
+//     li.appendChild(playerNameDiv);
+//     li.appendChild(playerTimeDiv);
+//     li.appendChild(deleteButtonDiv);
+
+//     ul.appendChild(li);
+//   });
+
+//   historyList.appendChild(ul);
+// }
 
 async function heraldPartake_deleteHistoryUser(pageId) {
   let journal = game.journal.find((j) => j.name === heraldPartake_journalName);
