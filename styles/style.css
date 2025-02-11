@@ -57,7 +57,7 @@
 }
 
 .heraldPartake-historyListContainer li {
-    background-color: rgb(0, 0, 0, 0.7);
+    background-color: rgb(0, 0, 0, 0.5);
     border: 2px solid rgb(202, 202, 202);
     color: white;
     margin: 5px 0;
@@ -106,7 +106,7 @@
 }
 
 .heraldPartake-buttonHistoryConfirm {
-    font-size: 14px;
+    font-size: 13px;
     width: 16px;
     height: 16px;
     color: green;
@@ -116,11 +116,12 @@
     text-align: center;
     align-items: center;
     justify-content: center;
+    border-radius: 5px;
 
 }
 
 .heraldPartake-buttonHistoryDelete {
-    font-size: 14px;
+    font-size: 13px;
     width: 16px;
     height: 16px;
     color: red;
@@ -130,7 +131,11 @@
     text-align: center;
     align-items: center;
     justify-content: center;
-
+    border-radius: 5px;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    -ms-border-radius: 5px;
+    -o-border-radius: 5px;
 }
 
 .heraldPartake-historyItemBottom {
