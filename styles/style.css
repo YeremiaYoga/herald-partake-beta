@@ -39,7 +39,7 @@
     right: 10vw;
     transform: translateX(-50%);
     width: 300px;
-    height: 80px;
+    height: 130px;
     background-color: rgba(0, 0, 0, 0.5);
     z-index: 5;
     display: flex;
@@ -281,28 +281,21 @@
 .heraldPartake-historyTooltip {
     display: none;
     width: 300px;
-    height: 60px;
+    min-height: 60px;
     background-color: rgba(0, 0, 0, 0.8);
     color: white;
     padding: 10px;
     font-size: 12px;
     border-radius: 5px;
     position: absolute;
-    top: 11vh;
+    top: 16vh;
     right: 10vw;
     transform: translateX(-50%);
     z-index: 10;
-    -webkit-border-radius: 5px;
-    -moz-border-radius: 5px;
-    -ms-border-radius: 5px;
-    -o-border-radius: 5px;
-    max-height: 100px;
     word-wrap: break-word;
 }
 
 .heraldPartake-optionTooltipValue {
-
-
     font-size: 12px;
     color: white;
     word-wrap: break-word;
@@ -329,7 +322,7 @@
     border-bottom-left-radius: 20px;
     border-bottom-right-radius: 20px;
     position: absolute;
-    top: 8vh;
+    top: 13vh;
     right: 10vw;
     transform: translateX(-50%);
     z-index: 10;

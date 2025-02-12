@@ -77,8 +77,8 @@ async function heraldPartake_toggleCollapsePartake() {
 
   if (heraldPartake_collapseDisplay) {
     listHistoryContainer.style.width = `300px`;
-    listHistoryContainer.style.height = `80px`;
-    collapseButton.style.top = `8vh`;
+    listHistoryContainer.style.height = `130px`;
+    collapseButton.style.top = `13vh`;
     const listHistoryValueDiv = document.createElement("div");
     listHistoryValueDiv.id = "heraldPartake-listHistoryValue";
     listHistoryValueDiv.classList.add("heraldPartake-listHistoryValue");
@@ -291,7 +291,6 @@ async function heraldPartake_renderHistoryUser() {
         <div class="heraldPartake-historyItemTop">
             <div id="heraldPartake-playerName-${item.id}" class="heraldPartake-playerName" ></div>
             <div id="heraldPartake-buttonHistoryContainer-${item.id}" class="heraldPartake-buttonHistoryContainer">
-              
             </div>
           </div>
           <div class="heraldPartake-historyItemBottom">
