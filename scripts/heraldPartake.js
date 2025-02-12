@@ -51,10 +51,48 @@ async function heraldPartake_renderListHistory() {
 
       document.body.appendChild(partake);
       heraldPartake_renderHistoryUser();
+      heraldPartake_createCollapseButton();
     })
     .catch((err) => {
       console.error("Gagal memuat template .html: partake", err);
     });
+}
+
+async function heraldPartake_createCollapseButton() {
+  let collapseButton = document.getElementById(
+    "heraldPartake-collapseButtonContainer"
+  );
+  collapseButton.addEventListener("click", async () => {
+    await heraldPartake_toggleCollapsePartake();
+  });
+}
+let heraldPartake_collapseDisplay = false;
+async function heraldPartake_toggleCollapsePartake() {
+  let listHistoryContainer = document.getElementById(
+    "heraldPartake-listHistoryContainer"
+  );
+  let collapseButton = document.getElementById(
+    "heraldPartake-collapseButtonContainer"
+  );
+
+  if (heraldPartake_collapseDisplay) {
+    listHistoryContainer.style.width = `300px`;
+    listHistoryContainer.style.height = `80px`;
+    collapseButton.style.top = `8vh`;
+    const listHistoryValueDiv = document.createElement("div");
+    listHistoryValueDiv.id = "heraldPartake-listHistoryValue";
+    listHistoryValueDiv.classList.add("heraldPartake-listHistoryValue");
+
+    listHistoryContainer.appendChild(listHistoryValueDiv);
+    await heraldPartake_renderHistoryUser();
+    heraldPartake_collapseDisplay = false;
+  } else {
+    listHistoryContainer.innerHTML = "";
+    listHistoryContainer.style.width = 0;
+    listHistoryContainer.style.height = 0;
+    collapseButton.style.top = `0`;
+    heraldPartake_collapseDisplay = true;
+  }
 }
 
 async function heraldPartake_activeBell() {
@@ -100,7 +138,7 @@ async function heraldPartake_dialogJoinGame(playerName, color, id) {
           let questionInput =
             selectedOption === "question"
               ? document.getElementById("heraldPartake-questionInput").value
-              : "";
+              : null;
 
           if (selectedOption === "question" && !questionInput) {
             document.getElementById(
@@ -197,7 +235,7 @@ async function heraldPartake_joinGame(playerName, color, option, input, id) {
     name: `${playerName}|${color}|${id}`,
     type: "text",
     text: {
-      content: `time:${new Date().toISOString()}|${option}|${input}`,
+      content: `time:${new Date().toISOString()}|${option}|${input}|false`,
       format: 1,
     },
     ownership: { default: 3 },
@@ -228,26 +266,42 @@ async function heraldPartake_renderHistoryUser() {
   if (!journal) {
     return;
   }
+
   heraldPartake_listHistoryUser = journal.pages.contents.slice().reverse();
-  const historyList = document.getElementById(
-    "heraldPartake-historyListContainer"
-  );
+  const historyList = document.getElementById("heraldPartake-listHistoryValue");
   let templateListPartake = ``;
   heraldPartake_listHistoryUser.forEach((item) => {
+    let arrContent = item.text.content.split("|");
+    let lastPart = arrContent[arrContent.length - 1].trim();
+    let historyStyle = ``;
+    let goldLine = ``;
+    if (lastPart == "true") {
+      historyStyle = `style="box-shadow: 0 0 2px 2px rgba(255, 215, 0, 0.8);"`;
+      goldLine = `
+        <div class="heraldPartake-historyItem-topleft"></div>
+        <div class="heraldPartake-historyItem-topright"></div>
+        <div class="heraldPartake-historyItem-bottomleft"></div>
+        <div class="heraldPartake-historyItem-bottomright"></div>
+        `;
+    }
     templateListPartake += `
-    <li class="heraldPartake-historyItem">
-      <div class="heraldPartake-historyItemTop">
-        <div id="heraldPartake-playerName-${item.id}" class="heraldPartake-playerName" ></div>
-        <div id="heraldPartake-buttonHistoryContainer-${item.id}" class="heraldPartake-buttonHistoryContainer">
+    <li id="heraldPartake-historyItem-${item.id}" class="heraldPartake-historyItem" ${historyStyle}>
+     ${goldLine}
+      <div class="heraldPartake-historyItemDetail">
+        <div class="heraldPartake-historyItemTop">
+            <div id="heraldPartake-playerName-${item.id}" class="heraldPartake-playerName" ></div>
+            <div id="heraldPartake-buttonHistoryContainer-${item.id}" class="heraldPartake-buttonHistoryContainer">
+              
+            </div>
+          </div>
+          <div class="heraldPartake-historyItemBottom">
+            <div id="heraldPartake-optionContainer-${item.id}" class="heraldPartake-optionContainer">
           
-        </div>
+            </div>
+            <div id="heraldPartake-historyTime-${item.id}" class="heraldPartake-historyTime"></div>
+          </div>
       </div>
-      <div class="heraldPartake-historyItemBottom">
-        <div id="heraldPartake-optionContainer-${item.id}" class="heraldPartake-optionContainer">
-       
-        </div>
-        <div id="heraldPartake-historyTime-${item.id}" class="heraldPartake-historyTime"></div>
-      </div>
+      
     </li>
     `;
   });
@@ -307,7 +361,7 @@ async function heraldPartake_renderDataHistory() {
       confirmButton.innerHTML = `<i class="fa-solid fa-check"></i>`;
       confirmButton.classList.add("heraldPartake-buttonHistoryConfirm");
       confirmButton.addEventListener("click", async () => {
-        await heraldPartake_confirmHistoryUser(arrName[2]);
+        await heraldPartake_confirmHistoryUser(item._id);
       });
 
       let deleteButton = document.createElement("div");
@@ -373,13 +427,33 @@ async function heraldPartake_renderHistoryTooltip(hover, name, data) {
   }
 }
 
-async function heraldPartake_confirmHistoryUser(id) {
-  let audio = new Audio("/modules/herald-partake-beta/assets/bell_sound.mp3");
-  audio.play();
+async function heraldPartake_confirmHistoryUser(pageId) {
+  let journal = game.journal.find((j) => j.name === heraldPartake_journalName);
+  if (!journal) return;
+
+  let page = journal.pages.get(pageId);
+  let content = page.text.content;
+  let parts = content.split("|");
+
+  let lastPart = parts[parts.length - 1].trim();
+  let newLastPart = lastPart === "true" ? "false" : "true";
+  parts[parts.length - 1] = newLastPart;
+  let updatedContent = parts.join("|");
+  await page.update({ "text.content": updatedContent });
+  await heraldPartake_renderHistoryUser();
+}
+
+function heraldPartake_ringBell() {
+  let volume = game.settings.get("core", "globalPlaylistVolume");
+  AudioHelper.play({
+    src: "/modules/herald-partake-beta/assets/bell_sound.mp3",
+    volume: volume,
+    autoplay: true,
+    loop: false,
+  });
 }
 
 async function heraldPartake_deleteHistoryUser(pageId) {
-  console.log(pageId);
   let journal = game.journal.find((j) => j.name === heraldPartake_journalName);
   if (!journal) return;
 
