@@ -31,12 +31,14 @@
     -o-border-radius: 5px;
 }
 
-
-
-.heraldPartake-listHistoryContainer {
+.heraldPartake-listHistoryDiv {
     position: fixed;
     top: 0;
     right: 10vw;
+}
+
+
+.heraldPartake-listHistoryContainer {
     transform: translateX(-50%);
     width: 300px;
     height: 130px;
@@ -46,6 +48,27 @@
     flex-direction: column;
     align-items: center;
     overflow: auto;
+    border-radius: 0 0 15px 15px;
+    -webkit-border-radius: 0 0 15px 15px;
+    -moz-border-radius: 0 0 15px 15px;
+    -ms-border-radius: 0 0 15px 15px;
+    -o-border-radius: 0 0 15px 15px;
+}
+
+.heraldPartake-collapseButtonContainer {
+    width: 20px;
+    height: 20px;
+    color: rgb(216, 216, 216);
+    font-size: 20px;
+    top: 13vh;
+    transform: translateX(-50%);
+    z-index: 10;
+    text-align: center;
+    cursor: pointer;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 10px solid rgb(216, 216, 216);
+
 }
 
 
@@ -80,10 +103,10 @@
     width: 270px;
     margin-bottom: 5px;
     overflow: hidden;
-   
+
 }
 
-.heraldPartake-historyItemDetail{
+.heraldPartake-historyItemDetail {
     z-index: 10;
 }
 
@@ -98,7 +121,7 @@
     background: gold;
     left: 0;
     transform-origin: left;
- 
+
 }
 
 .heraldPartake-historyItem-topleft::before {
@@ -111,7 +134,7 @@
 .heraldPartake-historyItem-topleft::after {
     top: 20px;
     transform: rotate(-40deg);
- 
+
 
 }
 
@@ -124,7 +147,7 @@
     background: gold;
     right: 0;
     transform-origin: right;
- 
+
 }
 
 .heraldPartake-historyItem-topright::before {
@@ -198,7 +221,7 @@
     justify-content: space-between;
     padding-top: 2px;
     padding-bottom: 2px;
-  
+
 }
 
 .heraldPartake-playerName::before {
@@ -206,7 +229,7 @@
     font-size: 18px;
     display: inline-block;
     margin-right: 2px;
-  
+
 }
 
 .heraldPartake-playerName {
@@ -215,14 +238,14 @@
     margin-left: 5px;
     color: #4caf50;
     font-weight: bold;
- 
+
 }
 
 .heraldPartake-buttonHistoryContainer {
     display: flex;
     gap: 5px;
     margin-right: 5px;
- 
+
 }
 
 .heraldPartake-buttonHistoryConfirm {
@@ -288,8 +311,7 @@
     font-size: 12px;
     border-radius: 5px;
     position: absolute;
-    top: 16vh;
-    right: 10vw;
+    top: 15vh;
     transform: translateX(-50%);
     z-index: 10;
     word-wrap: break-word;
@@ -312,21 +334,12 @@
     z-index: 10;
 }
 
-.heraldPartake-collapseButtonContainer {
-    width: 300px;
-    height: 20px;
-    background-color: rgba(212, 212, 212, 1);
-    color: black;
-    padding: 5px;
-    font-size: 12px;
-    border-bottom-left-radius: 20px;
-    border-bottom-right-radius: 20px;
+button.dialog-button.join {
+    padding: 4px 8px;
+    font-size: 14px;
+    height: 50px;
+    width: 95%;
+    flex: 0;
+    bottom: 10px;
     position: absolute;
-    top: 13vh;
-    right: 10vw;
-    transform: translateX(-50%);
-    z-index: 10;
-    text-align: center;
-    cursor: pointer;
-
 }

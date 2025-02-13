@@ -71,11 +71,13 @@ async function heraldPartake_toggleCollapsePartake() {
   let listHistoryContainer = document.getElementById(
     "heraldPartake-listHistoryContainer"
   );
+  let listHistoryDiv = document.getElementById("heraldPartake-listHistoryDiv");
   let collapseButton = document.getElementById(
     "heraldPartake-collapseButtonContainer"
   );
 
   if (heraldPartake_collapseDisplay) {
+    listHistoryDiv.style.top = "0";
     listHistoryContainer.style.width = `300px`;
     listHistoryContainer.style.height = `130px`;
     collapseButton.style.top = `13vh`;
@@ -87,9 +89,9 @@ async function heraldPartake_toggleCollapsePartake() {
     await heraldPartake_renderHistoryUser();
     heraldPartake_collapseDisplay = false;
   } else {
-    listHistoryContainer.innerHTML = "";
-    listHistoryContainer.style.width = 0;
-    listHistoryContainer.style.height = 0;
+    listHistoryDiv.style.top = "-13vh";
+    // listHistoryContainer.style.width = 0;
+    // listHistoryContainer.style.height = 0;
     collapseButton.style.top = `0`;
     heraldPartake_collapseDisplay = true;
   }
@@ -131,6 +133,7 @@ async function heraldPartake_dialogJoinGame(playerName, color, id) {
     buttons: {
       join: {
         label: "Join Game",
+        class:"heraldPartake-joinButton",
         callback: async () => {
           let selectedOption = document.querySelector(
             'input[name="roleOption"]:checked'
@@ -415,6 +418,12 @@ async function heraldPartake_renderDataHistory() {
 async function heraldPartake_renderHistoryTooltip(hover, name, data) {
   let historyTooltip = document.getElementById("heraldPartake-historyTooltip");
   if (hover == true) {
+    let existingTooltip = document.querySelector(
+      ".heraldPartake-optionTooltipValue"
+    );
+    if (existingTooltip) {
+      existingTooltip.remove();
+    }
     let tooltipValue = document.createElement("div");
     tooltipValue.classList.add("heraldPartake-optionTooltipValue");
     tooltipValue.innerText = data;
@@ -440,6 +449,7 @@ async function heraldPartake_confirmHistoryUser(pageId) {
   let updatedContent = parts.join("|");
   await page.update({ "text.content": updatedContent });
   await heraldPartake_renderHistoryUser();
+  heraldPartake_ringBell();
 }
 
 function heraldPartake_ringBell() {
