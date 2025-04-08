@@ -1,4 +1,6 @@
 const heraldPartake_journalName = "Herald Partake";
+
+let heraldPartake_urgencySelected = "neutral";
 let heraldPartake_listHistoryUser = [];
 function heraldPartake_renderButton() {
   const existingBar = document.getElementById("heraldPartake-buttonContainer");
@@ -89,7 +91,7 @@ async function heraldPartake_toggleCollapsePartake() {
     await heraldPartake_renderHistoryUser();
     heraldPartake_collapseDisplay = false;
   } else {
-    listHistoryDiv.style.top = "-13vh";
+    listHistoryDiv.style.top = "-130px";
     // listHistoryContainer.style.width = 0;
     // listHistoryContainer.style.height = 0;
     collapseButton.style.top = `0`;
@@ -100,29 +102,47 @@ async function heraldPartake_toggleCollapsePartake() {
 async function heraldPartake_activeBell() {
   const user = game.user;
   const hexColor = `${user.color.toString(16).padStart(6, "0")}`;
+  let selectedActor = user.character;
+  console.log(selectedActor);
   if (user.role === CONST.USER_ROLES.PLAYER) {
-    await heraldPartake_dialogJoinGame(user.name, hexColor, user.id);
+    await heraldPartake_dialogJoinGame(
+      user.name,
+      hexColor,
+      user.id,
+      selectedActor.name
+    );
   } else {
     await heraldPartake_createJournal();
   }
 }
 
-async function heraldPartake_dialogJoinGame(playerName, color, id) {
+async function heraldPartake_dialogJoinGame(playerName, color, id, actorName) {
   let content = `
       <div>
-          <p>Please choose your option:</p>
-          <label>
+          <div class="heraldPartake-dialogPartakeTop">
+            <div>
+              <p>Please choose your option:</p>
+            </div>
+            <div id="heraldPartake-urgencySelectorContainer" class="heraldPartake-urgencySelectorContainer">
+              <div class="heraldPartake-urgencySystemItem" data-name="neutral">⚙️</div>
+              <div class="heraldPartake-urgencySystemItem" data-name="await">🕙</div>
+              <div class="heraldPartake-urgencySystemItem" data-name="urgent">‼️</div>
+            </div>
+          </div>
+          <div class="heraldPartake-dialogPartakeMiddle">
+            <label>
               <input type="radio" name="roleOption" value="roleplaying" checked> Roleplaying
-          </label>
-          <br>
-          <label>
-              <input type="radio" name="roleOption" value="question"> Question
-          </label>
-          <br>
-          <div id="heraldPartake-questionInputContainer" style="display:none;">
-              <label for="heraldPartake-questionInput">Please provide your question:</label>
-              <textarea id="heraldPartake-questionInput" placeholder="Your question..." maxlength="300" rows="4" cols="40"></textarea>
-              <p id="heraldPartake-questionWarning" style="color: red; display: none;">Question cannot be empty.</p>
+            </label>
+            <br>
+            <label>
+                <input type="radio" name="roleOption" value="question"> Question
+            </label>
+            <br>
+            <div id="heraldPartake-questionInputContainer" style="display:none;">
+                <label for="heraldPartake-questionInput">Please provide your question:</label>
+                <textarea id="heraldPartake-questionInput" placeholder="Your question..." maxlength="300" rows="4" cols="40"></textarea>
+                <p id="heraldPartake-questionWarning" style="color: red; display: none;">Question cannot be empty.</p>
+            </div>
           </div>
       </div>
   `;
@@ -132,8 +152,8 @@ async function heraldPartake_dialogJoinGame(playerName, color, id) {
     content: content,
     buttons: {
       join: {
-        label: "Join Game",
-        class:"heraldPartake-joinButton",
+        label: "Wish To Partake",
+        class: "heraldPartake-joinButton",
         callback: async () => {
           let selectedOption = document.querySelector(
             'input[name="roleOption"]:checked'
@@ -159,7 +179,9 @@ async function heraldPartake_dialogJoinGame(playerName, color, id) {
               color,
               selectedOption,
               questionInput,
-              id
+              id,
+              actorName,
+              heraldPartake_urgencySelected
             );
           }
         },
@@ -198,7 +220,35 @@ async function heraldPartake_dialogJoinGame(playerName, color, id) {
         scale: 1.0,
       });
     }
+
+    document
+      .querySelectorAll(".heraldPartake-urgencySystemItem")
+      .forEach((item) => {
+        const name = item.getAttribute("data-name");
+        if (name === heraldPartake_urgencySelected) {
+          item.classList.add("active");
+        }
+        item.addEventListener("click", () => {
+          const selected = item.getAttribute("data-name");
+          heraldPartake_urgencySelected = selected;
+          heraldPartake_updateUrgencySystem(selected);
+          console.log(heraldPartake_urgencySelected);
+        });
+      });
   });
+}
+
+function heraldPartake_updateUrgencySystem(selectedName) {
+  document
+    .querySelectorAll(".heraldPartake-urgencySystemItem")
+    .forEach((item) => {
+      const name = item.getAttribute("data-name");
+      if (name === selectedName) {
+        item.classList.add("active");
+      } else {
+        item.classList.remove("active");
+      }
+    });
 }
 
 async function heraldPartake_createJournal() {
@@ -223,7 +273,15 @@ async function heraldPartake_createJournal() {
   }
 }
 
-async function heraldPartake_joinGame(playerName, color, option, input, id) {
+async function heraldPartake_joinGame(
+  playerName,
+  color,
+  option,
+  input,
+  id,
+  actorName,
+  urgency
+) {
   let journalEntry = game.journal.find(
     (j) => j.name === heraldPartake_journalName
   );
@@ -235,7 +293,7 @@ async function heraldPartake_joinGame(playerName, color, option, input, id) {
   }
 
   const pageData = {
-    name: `${playerName}|${color}|${id}`,
+    name: `${playerName}|${color}|${id}|${actorName}|${urgency}`,
     type: "text",
     text: {
       content: `time:${new Date().toISOString()}|${option}|${input}|false`,
@@ -291,15 +349,20 @@ async function heraldPartake_renderHistoryUser() {
     <li id="heraldPartake-historyItem-${item.id}" class="heraldPartake-historyItem" ${historyStyle}>
      ${goldLine}
       <div class="heraldPartake-historyItemDetail">
-        <div class="heraldPartake-historyItemTop">
-            <div id="heraldPartake-playerName-${item.id}" class="heraldPartake-playerName" ></div>
+          <div class="heraldPartake-historyItemTop">
+            <div id="heraldPartake-actorName-${item.id}" class="heraldPartake-actorName"></div>
             <div id="heraldPartake-buttonHistoryContainer-${item.id}" class="heraldPartake-buttonHistoryContainer">
             </div>
           </div>
+          <div class="heraldPartake-historyItemMiddle">
+            <div id="heraldPartake-playerName-${item.id}" class="heraldPartake-playerName"></div>
+          </div>
           <div class="heraldPartake-historyItemBottom">
-            <div id="heraldPartake-optionContainer-${item.id}" class="heraldPartake-optionContainer">
-          
-            </div>
+          <div class="heraldPartake-optionContainer">
+            <div id="heraldPartake-urgencyIconContainer-${item.id}" class="heraldPartake-urgencyIconContainer"></div>
+            <div id="heraldPartake-optionName-${item.id}" class="heraldPartake-optionName"></div>
+            <div id="heraldPartake-urgencyName-${item.id}" class="heraldPartake-urgencyName"></div>
+          </div>
             <div id="heraldPartake-historyTime-${item.id}" class="heraldPartake-historyTime"></div>
           </div>
       </div>
@@ -331,6 +394,15 @@ async function heraldPartake_renderDataHistory() {
     if (playerName) {
       playerName.innerText = arrName[0];
       playerName.style.color = `${arrName[1]}`;
+    }
+
+    let actorName = document.getElementById(
+      `heraldPartake-actorName-${item.id}`
+    );
+
+    if (actorName) {
+      actorName.innerText = arrName[3];
+      actorName.style.color = `${arrName[1]}`;
     }
 
     let playerTime = document.getElementById(
@@ -386,10 +458,50 @@ async function heraldPartake_renderDataHistory() {
     }
 
     let playerOption = document.getElementById(
-      `heraldPartake-optionContainer-${item.id}`
+      `heraldPartake-optionName-${item.id}`
     );
 
     if (playerOption) {
+      let urgencyIcon = ``;
+      let urgencyNameCapitalized = ``;
+      if (arrName[4] == "urgent") {
+        urgencyIcon = `
+        ‼️`;
+      } else if (arrName[4] == "await") {
+        urgencyIcon = `🕙`;
+      } else {
+        urgencyIcon = `⚙️`;
+      }
+      if (arrName[4]) {
+        urgencyNameCapitalized =
+          arrName[4].charAt(0).toUpperCase() + arrName[4].slice(1);
+      }
+
+      let urgencyIconDiv = document.getElementById(
+        `heraldPartake-urgencyIconContainer-${item.id}`
+      );
+      let urgencyNameDiv = document.getElementById(
+        `heraldPartake-urgencyName-${item.id}`
+      );
+
+      if (urgencyIconDiv) {
+        urgencyIconDiv.innerHTML = `
+        <div class="heraldPartake-urgencyIconWrapper">
+          <div class="heraldPartake-urgencyIcon">${urgencyIcon}</div>
+          <div class="heraldPartake-urgencyTooltip">${urgencyNameCapitalized}</div>
+        </div>
+        `;
+      }
+      if (urgencyNameDiv) {
+        const urgency = arrName[4];
+        urgencyNameDiv.innerText = `(${urgencyNameCapitalized})`;
+        let color = "#e2e2e2";
+        if (urgency === "await") color = "#9ffffd";
+        else if (urgency === "urgent") color = "#ff7e7e";
+
+        urgencyNameDiv.style.color = color;
+      }
+
       if (arrContent[1] == "question") {
         let optionDiv = document.createElement("div");
         optionDiv.classList.add("heraldPartake-optionSelected");
@@ -474,9 +586,9 @@ async function heraldPartake_deleteHistoryUser(pageId) {
 }
 
 function heraldPartake_universalInterfalUpdate() {
-  setInterval(async () => {
-    await heraldPartake_renderHistoryUser();
-  }, 5000);
+  // setInterval(async () => {
+  //   await heraldPartake_renderHistoryUser();
+  // }, 5000);
 }
 
 export {
