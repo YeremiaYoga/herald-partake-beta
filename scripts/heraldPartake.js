@@ -123,10 +123,19 @@ async function heraldPartake_dialogJoinGame(playerName, color, id, actorName) {
             <div>
               <p>Please choose your option:</p>
             </div>
-            <div id="heraldPartake-urgencySelectorContainer" class="heraldPartake-urgencySelectorContainer">
-              <div class="heraldPartake-urgencySystemItem" data-name="neutral">⚙️</div>
-              <div class="heraldPartake-urgencySystemItem" data-name="await">🕙</div>
-              <div class="heraldPartake-urgencySystemItem" data-name="urgent">‼️</div>
+           <div id="heraldPartake-urgencySelectorContainer" class="heraldPartake-urgencySelectorContainer">
+              <div class="heraldPartake-urgencySystemItem" data-name="neutral">
+                ⚙️
+                <span class="heraldPartake-urgencySelectTooltip">Neutral</span>
+              </div>
+              <div class="heraldPartake-urgencySystemItem" data-name="await">
+                🕙
+                <span class="heraldPartake-urgencySelectTooltip">Await</span>
+              </div>
+              <div class="heraldPartake-urgencySystemItem" data-name="urgent">
+                ‼️
+                <span class="heraldPartake-urgencySelectTooltip">Urgent</span>
+              </div>
             </div>
           </div>
           <div class="heraldPartake-dialogPartakeMiddle">
@@ -366,7 +375,6 @@ async function heraldPartake_renderHistoryUser() {
             <div id="heraldPartake-historyTime-${item.id}" class="heraldPartake-historyTime"></div>
           </div>
       </div>
-      
     </li>
     `;
   });
@@ -480,9 +488,6 @@ async function heraldPartake_renderDataHistory() {
       let urgencyIconDiv = document.getElementById(
         `heraldPartake-urgencyIconContainer-${item.id}`
       );
-      let urgencyNameDiv = document.getElementById(
-        `heraldPartake-urgencyName-${item.id}`
-      );
 
       if (urgencyIconDiv) {
         urgencyIconDiv.innerHTML = `
@@ -492,15 +497,19 @@ async function heraldPartake_renderDataHistory() {
         </div>
         `;
       }
-      if (urgencyNameDiv) {
-        const urgency = arrName[4];
-        urgencyNameDiv.innerText = `(${urgencyNameCapitalized})`;
-        let color = "#e2e2e2";
-        if (urgency === "await") color = "#9ffffd";
-        else if (urgency === "urgent") color = "#ff7e7e";
 
-        urgencyNameDiv.style.color = color;
-      }
+      // let urgencyNameDiv = document.getElementById(
+      //   `heraldPartake-urgencyName-${item.id}`
+      // );
+      // if (urgencyNameDiv) {
+      //   const urgency = arrName[4];
+      //   urgencyNameDiv.innerText = `(${urgencyNameCapitalized})`;
+      //   let color = "#e2e2e2";
+      //   if (urgency === "await") color = "#9ffffd";
+      //   else if (urgency === "urgent") color = "#ff7e7e";
+
+      //   urgencyNameDiv.style.color = color;
+      // }
 
       if (arrContent[1] == "question") {
         let optionDiv = document.createElement("div");
@@ -586,9 +595,9 @@ async function heraldPartake_deleteHistoryUser(pageId) {
 }
 
 function heraldPartake_universalInterfalUpdate() {
-  // setInterval(async () => {
-  //   await heraldPartake_renderHistoryUser();
-  // }, 5000);
+  setInterval(async () => {
+    await heraldPartake_renderHistoryUser();
+  }, 5000);
 }
 
 export {
