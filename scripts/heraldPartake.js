@@ -624,7 +624,7 @@ async function heraldPartake_deleteHistoryUser(pageId) {
 
 function heraldPartake_universalInterfalUpdate() {
   setInterval(async () => {
-    // await heraldPartake_renderHistoryUser();
+    await heraldPartake_renderHistoryUser();
   }, 5000);
 }
 
