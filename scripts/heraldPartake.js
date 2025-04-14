@@ -126,15 +126,27 @@ async function heraldPartake_dialogJoinGame(playerName, color, id, actorName) {
            <div id="heraldPartake-urgencySelectorContainer" class="heraldPartake-urgencySelectorContainer">
               <div class="heraldPartake-urgencySystemItem" data-name="neutral">
                 ⚙️
-                <span class="heraldPartake-urgencySelectTooltip">Neutral</span>
+                <span class="heraldPartake-urgencySelectTooltip" style="left:50%;">
+                Neutral </br>
+                Wishing to join upon the current </br>
+                Roleplay, but not right away
+                </span>
               </div>
               <div class="heraldPartake-urgencySystemItem" data-name="await">
                 🕙
-                <span class="heraldPartake-urgencySelectTooltip">Await</span>
+                <span class="heraldPartake-urgencySelectTooltip" style="left:50%;">
+                Await </br>
+                After the Current </br>
+                Roleplay is done
+                </span>
               </div>
               <div class="heraldPartake-urgencySystemItem" data-name="urgent">
                 ‼️
-                <span class="heraldPartake-urgencySelectTooltip">Urgent</span>
+                <span class="heraldPartake-urgencySelectTooltip" style="left:-35px;">
+                Urgent </br>
+                Wishimg to join the current </br>
+                Roleplay as soon as possible
+                </span>
               </div>
             </div>
           </div>
@@ -472,33 +484,17 @@ async function heraldPartake_renderDataHistory() {
     if (playerOption) {
       let urgencyIcon = ``;
       let urgencyNameCapitalized = ``;
-      let tooltipUrgencyIcon = ``;
-
+      if (arrName[4] == "urgent") {
+        urgencyIcon = `
+        ‼️`;
+      } else if (arrName[4] == "await") {
+        urgencyIcon = `🕙`;
+      } else {
+        urgencyIcon = `⚙️`;
+      }
       if (arrName[4]) {
         urgencyNameCapitalized =
           arrName[4].charAt(0).toUpperCase() + arrName[4].slice(1);
-        if (arrName[4] == "urgent") {
-          urgencyIcon = `
-            ‼️`;
-          tooltipUrgencyIcon = `
-            Urgent </br>
-            Wishimg to join </br>
-            the current Roleplay </br>
-            as soon as possible`;
-        } else if (arrName[4] == "await") {
-          urgencyIcon = `🕙`;
-          tooltipUrgencyIcon = `
-            Await </br>
-            After the Current </br>
-            Roleplay is done`;
-        } else {
-          urgencyIcon = `⚙️`;
-          tooltipUrgencyIcon = `
-            Nuetral </br>
-            Wishing to join upon</br>
-            the current Roleplay,</br>
-            but not right away`;
-        }
       }
 
       let urgencyIconDiv = document.getElementById(
@@ -509,21 +505,9 @@ async function heraldPartake_renderDataHistory() {
         urgencyIconDiv.innerHTML = `
         <div class="heraldPartake-urgencyIconWrapper">
           <div class="heraldPartake-urgencyIcon">${urgencyIcon}</div>
-          <div class="heraldPartake-urgencyTooltip">${tooltipUrgencyIcon}</div>
-        </div>`;
-        const icon = urgencyIconDiv.querySelector(".heraldPartake-urgencyIcon");
-        const tooltip = urgencyIconDiv.querySelector(
-          ".heraldPartake-urgencyTooltip"
-        );
-
-        if (icon && tooltip) {
-          icon.addEventListener("mouseenter", () => {
-            tooltip.classList.add("active");
-          });
-          icon.addEventListener("mouseleave", () => {
-            tooltip.classList.remove("active");
-          });
-        }
+          <div class="heraldPartake-urgencyTooltip">${urgencyNameCapitalized}</div>
+        </div>
+        `;
       }
 
       // let urgencyNameDiv = document.getElementById(
