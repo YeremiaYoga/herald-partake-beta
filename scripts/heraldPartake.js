@@ -472,17 +472,33 @@ async function heraldPartake_renderDataHistory() {
     if (playerOption) {
       let urgencyIcon = ``;
       let urgencyNameCapitalized = ``;
-      if (arrName[4] == "urgent") {
-        urgencyIcon = `
-        ‼️`;
-      } else if (arrName[4] == "await") {
-        urgencyIcon = `🕙`;
-      } else {
-        urgencyIcon = `⚙️`;
-      }
+      let tooltipUrgencyIcon = ``;
+
       if (arrName[4]) {
         urgencyNameCapitalized =
           arrName[4].charAt(0).toUpperCase() + arrName[4].slice(1);
+        if (arrName[4] == "urgent") {
+          urgencyIcon = `
+            ‼️`;
+          tooltipUrgencyIcon = `
+            Urgent </br>
+            Wishimg to join </br>
+            the current Roleplay </br>
+            as soon as possible`;
+        } else if (arrName[4] == "await") {
+          urgencyIcon = `🕙`;
+          tooltipUrgencyIcon = `
+            Await </br>
+            After the Current </br>
+            Roleplay is done`;
+        } else {
+          urgencyIcon = `⚙️`;
+          tooltipUrgencyIcon = `
+            Nuetral </br>
+            Wishing to join upon</br>
+            the current Roleplay,</br>
+            but not right away`;
+        }
       }
 
       let urgencyIconDiv = document.getElementById(
@@ -493,9 +509,21 @@ async function heraldPartake_renderDataHistory() {
         urgencyIconDiv.innerHTML = `
         <div class="heraldPartake-urgencyIconWrapper">
           <div class="heraldPartake-urgencyIcon">${urgencyIcon}</div>
-          <div class="heraldPartake-urgencyTooltip">${urgencyNameCapitalized}</div>
-        </div>
-        `;
+          <div class="heraldPartake-urgencyTooltip">${tooltipUrgencyIcon}</div>
+        </div>`;
+        const icon = urgencyIconDiv.querySelector(".heraldPartake-urgencyIcon");
+        const tooltip = urgencyIconDiv.querySelector(
+          ".heraldPartake-urgencyTooltip"
+        );
+
+        if (icon && tooltip) {
+          icon.addEventListener("mouseenter", () => {
+            tooltip.classList.add("active");
+          });
+          icon.addEventListener("mouseleave", () => {
+            tooltip.classList.remove("active");
+          });
+        }
       }
 
       // let urgencyNameDiv = document.getElementById(
@@ -596,7 +624,7 @@ async function heraldPartake_deleteHistoryUser(pageId) {
 
 function heraldPartake_universalInterfalUpdate() {
   setInterval(async () => {
-    await heraldPartake_renderHistoryUser();
+    // await heraldPartake_renderHistoryUser();
   }, 5000);
 }
 
