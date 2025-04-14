@@ -388,7 +388,7 @@ button.dialog-button.join {
     position: absolute;
     z-index: 17;
     top: 100%;
-    left: 10%;
+   
     transform: translateX(-50%);
     white-space: nowrap;
     opacity: 0;
