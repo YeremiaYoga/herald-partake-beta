@@ -10,9 +10,6 @@
   "styles": ["styles/style.css"],
   "persistentStorage": true,
   "socket": true,
-  "dependencies": [],
-  "languages": [],
-  "packs": [],
   "compatibility": {
     "minimum": "12",
     "verified": "12"
